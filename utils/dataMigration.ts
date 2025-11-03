@@ -13,6 +13,21 @@ export class DataMigrationService {
     }
 
     console.log('Starting data migration for user:', userId);
+    
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<boolean>((_, reject) => {
+      setTimeout(() => reject(new Error('Migration timeout after 10 seconds')), 10000);
+    });
+
+    try {
+      return await Promise.race([this.performMigration(userId), timeoutPromise]);
+    } catch (error) {
+      console.error('Migration failed or timed out:', error);
+      return false;
+    }
+  }
+
+  private static async performMigration(userId: string): Promise<boolean> {
     let migrationSuccess = true;
 
     try {

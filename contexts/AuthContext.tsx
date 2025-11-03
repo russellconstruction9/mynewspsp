@@ -58,17 +58,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false); // Set loading to false immediately
         
-        // Run data migration when user signs in
+        // Run data migration when user signs in (non-blocking)
         if (event === 'SIGNED_IN' && session?.user) {
-          try {
-            await DataMigrationService.migrateUserData(session.user.id);
-          } catch (error) {
-            console.error('Data migration failed:', error);
-          }
+          // Run migration in background without blocking the UI
+          DataMigrationService.migrateUserData(session.user.id).catch(error => {
+            console.error('Data migration failed (non-blocking):', error);
+            // Migration failure doesn't prevent app from working
+          });
         }
-        
-        setLoading(false);
       }
     );
 
