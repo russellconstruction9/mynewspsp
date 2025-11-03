@@ -48,9 +48,22 @@ export interface UserProfile {
 
 export interface CoParentMessage {
     id: string;
-    text: string;
-    senderId: 'user' | 'other_parent';
-    timestamp: string; // ISO string
+    content: string;
+    senderId: string; // UUID of the sender
+    conversationId: string; // UUID of the conversation
+    createdAt: string; // ISO string
+    readAt?: string; // ISO string, optional
+}
+
+export interface Conversation {
+    id: string;
+    parent1Id: string; // UUID
+    parent2Id: string; // UUID
+    createdAt: string; // ISO string
+    updatedAt: string; // ISO string
+    lastMessage?: CoParentMessage;
+    otherParentName?: string; // Derived from user profile
+    otherParentRole?: string; // Derived from user profile
 }
 
 export interface StructuredLegalDocument {

@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { CoParentMessage, UserProfile } from '../types';
-import { PaperAirplaneIcon, UserCircleIcon, ChatBubbleLeftRightIcon } from './icons';
+import { CoParentMessage, UserProfile, Conversation } from '../types';
+import { MessagingService } from '../services/messagingService';
+import { PaperAirplaneIcon, UserCircleIcon, ChatBubbleLeftRightIcon, PlusIcon } from './icons';
 
 interface MessagingProps {
-    messages: CoParentMessage[];
-    onSendMessage: (text: string) => void;
     userProfile: UserProfile | null;
 }
 

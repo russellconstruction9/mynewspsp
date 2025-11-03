@@ -165,7 +165,7 @@ export const getThemeAnalysis = async (reports: Report[], category: string): Pro
 export const getSingleIncidentAnalysis = async (mainReport: Report, allReports: Report[], userProfile: UserProfile | null): Promise<{ analysis: string; sources: any[]; tokensUsed: number }> => {
     try {
         const genAI = getGeminiAPI();
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
         
         const mainReportContent = `--- PRIMARY INCIDENT ---\n${mainReport.content}\n--- END PRIMARY INCIDENT ---`;
         const otherReportsContent = allReports
@@ -373,7 +373,7 @@ export const generateEvidencePackage = async (
     try {
         const genAI = getGeminiAPI();
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
+            model: "gemini-2.5-pro",
             generationConfig: {
                 responseMimeType: "application/json"
             }
