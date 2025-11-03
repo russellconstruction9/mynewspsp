@@ -76,6 +76,17 @@ export class DataService {
         return false;
       }
 
+      // If email was added, check for pending invitations
+      if (profile.email) {
+        try {
+          const { MessagingService } = await import('./messagingService');
+          await MessagingService.processPendingInvitations(profile.email);
+        } catch (inviteError) {
+          console.error('Error processing pending invitations:', inviteError);
+          // Don't fail the profile save if invitation processing fails
+        }
+      }
+
       return true;
     } catch (error) {
       console.error('Error in saveUserProfile:', error);

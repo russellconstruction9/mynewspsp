@@ -153,6 +153,37 @@ CREATE TRIGGER populate_participants_on_conversation_create
 ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS email TEXT;
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 
+-- Create invitations table to track invites sent to other parents
+CREATE TABLE IF NOT EXISTS public.invitations (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    recipient_email TEXT NOT NULL,
+    sender_name TEXT NOT NULL,
+    sender_role TEXT,
+    status TEXT CHECK (status IN ('pending', 'accepted', 'expired')) DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    accepted_at TIMESTAMP WITH TIME ZONE,
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '30 days')
+);
+
+-- Enable RLS for invitations
+ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for Invitations
+CREATE POLICY "Users can view their sent invitations" ON public.invitations
+    FOR SELECT USING (auth.uid() = sender_id);
+
+CREATE POLICY "Users can create invitations" ON public.invitations
+    FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+CREATE POLICY "Users can update their invitations" ON public.invitations
+    FOR UPDATE USING (auth.uid() = sender_id);
+
+-- Create index for invitations
+CREATE INDEX IF NOT EXISTS idx_invitations_sender ON public.invitations(sender_id);
+CREATE INDEX IF NOT EXISTS idx_invitations_recipient_email ON public.invitations(recipient_email);
+CREATE INDEX IF NOT EXISTS idx_invitations_status ON public.invitations(status);
+
 -- Function to find or create a conversation between two users
 CREATE OR REPLACE FUNCTION get_or_create_conversation(user1_id UUID, user2_id UUID)
 RETURNS UUID AS $$

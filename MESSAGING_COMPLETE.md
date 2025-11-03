@@ -33,21 +33,30 @@
 ### 1. **Set Up Your Profile**
 - Go to Profile section
 - Add your email address
-- This allows other parents to find you
+- This allows other parents to find you and automatically processes any pending invitations
 
 ### 2. **Start a Conversation**
 - Navigate to Messaging section
 - Click the "+" button to start new conversation
 - Enter the other parent's email address
-- System will find them and create a secure conversation
+- **Two scenarios:**
+  - **They have an account**: Conversation starts immediately
+  - **They don't have an account**: They receive an invitation to join
 
-### 3. **Send Messages**
+### 3. **Invitation System**
+- When you invite someone who doesn't have an account:
+  - System stores the invitation
+  - You get a sign-up link to share with them
+  - When they create their profile with that email, conversations auto-start
+  - No need to re-invite!
+
+### 4. **Send Messages**
 - Select a conversation from the sidebar
 - Type your message in the input field
 - Press Enter or click Send
 - Messages appear in real-time for both parties
 
-### 4. **Real-time Features**
+### 5. **Real-time Features**
 - Messages appear instantly
 - Read receipts show when messages are read
 - Conversation list updates with latest activity

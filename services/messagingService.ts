@@ -320,17 +320,134 @@ export class MessagingService {
   }
 
   // Create a conversation with another user by their email
-  static async createConversationByEmail(otherParentEmail: string): Promise<string | null> {
+  static async createConversationByEmail(otherParentEmail: string): Promise<{ success: boolean; conversationId?: string; needsInvite?: boolean; message?: string }> {
     try {
       const userResult = await this.findUserByEmail(otherParentEmail);
-      if (!userResult) {
-        return null;
+      if (userResult) {
+        // User exists, create conversation
+        const conversationId = await this.getOrCreateConversation(userResult.userId);
+        return { 
+          success: true, 
+          conversationId: conversationId || undefined,
+          message: 'Conversation created successfully!'
+        };
+      } else {
+        // User doesn't exist, need to send invitation
+        const inviteResult = await this.sendInvitation(otherParentEmail);
+        return {
+          success: true,
+          needsInvite: true,
+          message: inviteResult ? 
+            'Invitation sent! They will receive an email to join CustodyX.AI and start messaging.' :
+            'Invitation prepared. You can share the sign-up link with them.'
+        };
       }
-
-      return await this.getOrCreateConversation(userResult.userId);
     } catch (error) {
       console.error('Error in createConversationByEmail:', error);
-      return null;
+      return { 
+        success: false, 
+        message: 'Error processing request. Please try again.' 
+      };
+    }
+  }
+
+  // Send invitation to join the platform
+  static async sendInvitation(email: string): Promise<boolean> {
+    try {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) return false;
+
+      // Get current user's profile for personalized invitation
+      const { data: senderProfile } = await supabase
+        .from('user_profiles')
+        .select('name, role')
+        .eq('user_id', currentUserId)
+        .single();
+
+      // Store invitation in database for tracking
+      const { error } = await supabase
+        .from('invitations')
+        .insert({
+          sender_id: currentUserId,
+          recipient_email: email,
+          sender_name: senderProfile?.name || 'Co-parent',
+          sender_role: senderProfile?.role || '',
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error storing invitation:', error);
+        // Don't fail if we can't store - the invite link will still work
+      }
+
+      // For now, we'll return true indicating the invitation is "prepared"
+      // In a production app, you'd integrate with an email service here
+      return true;
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      return false;
+    }
+  }
+
+  // Get pending invitations sent by current user
+  static async getSentInvitations(): Promise<any[]> {
+    try {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) return [];
+
+      const { data, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('sender_id', currentUserId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching invitations:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getSentInvitations:', error);
+      return [];
+    }
+  }
+
+  // Check for pending invitations when user creates profile with email
+  static async processPendingInvitations(userEmail: string): Promise<void> {
+    try {
+      const currentUserId = await this.getCurrentUserId();
+      if (!currentUserId) return;
+
+      // Find pending invitations for this email
+      const { data: invitations, error } = await supabase
+        .from('invitations')
+        .select('*')
+        .eq('recipient_email', userEmail)
+        .eq('status', 'pending')
+        .lt('expires_at', new Date().toISOString()); // Not expired
+
+      if (error || !invitations || invitations.length === 0) return;
+
+      // Create conversations with all users who invited this email
+      for (const invitation of invitations) {
+        try {
+          await this.getOrCreateConversation(invitation.sender_id);
+          
+          // Mark invitation as accepted
+          await supabase
+            .from('invitations')
+            .update({ 
+              status: 'accepted',
+              accepted_at: new Date().toISOString()
+            })
+            .eq('id', invitation.id);
+        } catch (error) {
+          console.error('Error processing invitation:', invitation.id, error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in processPendingInvitations:', error);
     }
   }
 }

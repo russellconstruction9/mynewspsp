@@ -111,26 +111,59 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
         if (!otherParentEmail.trim()) return;
 
         try {
-            const conversationId = await MessagingService.createConversationByEmail(otherParentEmail.trim());
+            const result = await MessagingService.createConversationByEmail(otherParentEmail.trim());
             
-            if (conversationId) {
-                // Refresh conversations to show the new one
-                await loadConversations();
-                setShowNewConversation(false);
-                setOtherParentEmail('');
+            if (result.success) {
+                if (result.conversationId) {
+                    // User exists, conversation created
+                    await loadConversations();
+                    setShowNewConversation(false);
+                    setOtherParentEmail('');
+                    
+                    // Find and select the new conversation
+                    const updatedConversations = await MessagingService.getConversations();
+                    const newConversation = updatedConversations.find(conv => conv.id === result.conversationId);
+                    if (newConversation) {
+                        setSelectedConversation(newConversation);
+                    }
+                } else if (result.needsInvite) {
+                    // User doesn't exist, invitation sent
+                    setShowNewConversation(false);
+                    setOtherParentEmail('');
+                    showInvitationSentDialog(result.message || 'Invitation sent!');
+                }
                 
-                // Find and select the new conversation
-                const updatedConversations = await MessagingService.getConversations();
-                const newConversation = updatedConversations.find(conv => conv.id === conversationId);
-                if (newConversation) {
-                    setSelectedConversation(newConversation);
+                if (result.message) {
+                    alert(result.message);
                 }
             } else {
-                alert('User not found. Please make sure the email address is correct and the other parent has an account.');
+                alert(result.message || 'Error starting conversation. Please try again.');
             }
         } catch (error) {
             console.error('Error creating conversation:', error);
             alert('Error starting conversation. Please try again.');
+        }
+    };
+
+    const showInvitationSentDialog = (message: string) => {
+        const currentUrl = window.location.origin;
+        const inviteText = `
+${message}
+
+You can also share this link with them directly:
+${currentUrl}
+
+They can sign up and you'll be able to start messaging once they create their profile with the email address: ${otherParentEmail}
+        `.trim();
+        
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(currentUrl).then(() => {
+                alert(inviteText + '\n\n(Sign-up link copied to clipboard!)');
+            }).catch(() => {
+                alert(inviteText);
+            });
+        } else {
+            alert(inviteText);
         }
     };
 
@@ -313,8 +346,11 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
             {/* New Conversation Modal */}
             {showNewConversation && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-96">
-                        <h3 className="text-lg font-semibold mb-4">Start New Conversation</h3>
+                    <div className="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Start New Conversation</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Enter the other parent's email address. If they don't have an account yet, we'll help you invite them.
+                        </p>
                         <div className="mb-4">
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                                 Other Parent's Email
@@ -325,8 +361,16 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
                                 value={otherParentEmail}
                                 onChange={(e) => setOtherParentEmail(e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter email address"
+                                placeholder="their.email@example.com"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && otherParentEmail.trim()) {
+                                        handleNewConversation();
+                                    }
+                                }}
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                                If they have an account, you'll start chatting immediately. If not, they'll get an invitation to join.
+                            </p>
                         </div>
                         <div className="flex gap-3">
                             <button
@@ -341,9 +385,9 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
                             <button
                                 onClick={handleNewConversation}
                                 disabled={!otherParentEmail.trim()}
-                                className="flex-1 px-4 py-2 text-white bg-blue-950 rounded-md hover:bg-blue-800 disabled:bg-gray-300"
+                                className="flex-1 px-4 py-2 text-white bg-blue-950 rounded-md hover:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed"
                             >
-                                Start Chat
+                                Continue
                             </button>
                         </div>
                     </div>
