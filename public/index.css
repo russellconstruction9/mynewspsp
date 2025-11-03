@@ -1,0 +1,10 @@
+/* Additional global styles if needed */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure the app takes full height */
+#root {
+  min-height: 100vh;
+}
