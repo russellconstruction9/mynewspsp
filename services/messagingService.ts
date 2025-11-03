@@ -289,28 +289,47 @@ export class MessagingService {
   }
 
   // Find a user by email to start a conversation
-  static async findUserByEmail(email: string): Promise<UserProfile | null> {
+  static async findUserByEmail(email: string): Promise<{ userId: string; profile: UserProfile } | null> {
     try {
-      // Note: This might need to be adjusted based on your auth setup
-      // You might need to add email to user_profiles table or use auth.users
-      const { data, error } = await supabase
+      // First, try to find user in user_profiles table by email
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select('user_id, name, role, children, email')
         .eq('email', email)
         .single();
 
-      if (error || !data) {
-        console.error('User not found:', error);
+      if (profileData) {
+        return {
+          userId: profileData.user_id,
+          profile: {
+            name: profileData.name,
+            role: profileData.role,
+            children: profileData.children
+          }
+        };
+      }
+
+      // If not found in profiles, try auth.users table (this requires service role key)
+      // For now, we'll return null and suggest the user to invite via profile setup
+      console.log('User not found in profiles:', profileError);
+      return null;
+    } catch (error) {
+      console.error('Error in findUserByEmail:', error);
+      return null;
+    }
+  }
+
+  // Create a conversation with another user by their email
+  static async createConversationByEmail(otherParentEmail: string): Promise<string | null> {
+    try {
+      const userResult = await this.findUserByEmail(otherParentEmail);
+      if (!userResult) {
         return null;
       }
 
-      return {
-        name: data.name,
-        role: data.role,
-        children: data.children
-      };
+      return await this.getOrCreateConversation(userResult.userId);
     } catch (error) {
-      console.error('Error in findUserByEmail:', error);
+      console.error('Error in createConversationByEmail:', error);
       return null;
     }
   }

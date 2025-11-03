@@ -44,6 +44,7 @@ export interface UserProfile {
     name: string;
     role: 'Mother' | 'Father' | '';
     children: string[];
+    email?: string; // Optional for now to maintain backward compatibility
 }
 
 export interface CoParentMessage {

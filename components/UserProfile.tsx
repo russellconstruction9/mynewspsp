@@ -13,12 +13,14 @@ const UserProfile: React.FC<UserProfileProps> = ({ onSave, onCancel, currentProf
     const [name, setName] = useState('');
     const [role, setRole] = useState<'Mother' | 'Father' | ''>('');
     const [children, setChildren] = useState<string[]>(['']);
+    const [email, setEmail] = useState('');
 
     useEffect(() => {
         if (currentProfile) {
             setName(currentProfile.name || '');
             setRole(currentProfile.role || '');
             setChildren(currentProfile.children.length > 0 ? currentProfile.children : ['']);
+            setEmail(currentProfile.email || '');
         }
     }, [currentProfile]);
 
@@ -46,6 +48,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onSave, onCancel, currentProf
             name,
             role,
             children: children.filter(c => c.trim() !== ''),
+            email: email.trim() || undefined,
         };
         onSave(profileData);
     };
@@ -89,6 +92,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ onSave, onCancel, currentProf
                         <option value="Mother">Mother</option>
                         <option value="Father">Father</option>
                     </select>
+                </div>
+
+                <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="mt-1 block w-full px-3 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                        placeholder="your.email@example.com"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                        This allows the other parent to find you for messaging. Optional but recommended.
+                    </p>
                 </div>
 
                 <div>

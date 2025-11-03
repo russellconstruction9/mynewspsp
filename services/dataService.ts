@@ -38,6 +38,7 @@ export class DataService {
         name: data.name,
         role: data.role,
         children: data.children,
+        email: data.email,
       };
 
       // Keep localStorage in sync
@@ -66,6 +67,7 @@ export class DataService {
           name: profile.name,
           role: profile.role,
           children: profile.children,
+          email: profile.email,
           updated_at: new Date().toISOString(),
         });
 

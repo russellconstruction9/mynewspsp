@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { CoParentMessage, UserProfile, Conversation } from '../types';
 import { MessagingService } from '../services/messagingService';
+import { supabase } from '../lib/supabase';
 import { PaperAirplaneIcon, UserCircleIcon, ChatBubbleLeftRightIcon, PlusIcon } from './icons';
 
 interface MessagingProps {
@@ -15,6 +16,7 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
     const [loading, setLoading] = useState(true);
     const [showNewConversation, setShowNewConversation] = useState(false);
     const [otherParentEmail, setOtherParentEmail] = useState('');
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const realtimeChannelRef = useRef<any>(null);
 
@@ -26,9 +28,18 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
         scrollToBottom();
     }, [messages]);
 
-    // Load conversations on mount
+    // Load current user ID and conversations on mount
     useEffect(() => {
-        loadConversations();
+        const loadUserAndConversations = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                setCurrentUserId(user?.id || null);
+                await loadConversations();
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        };
+        loadUserAndConversations();
     }, []);
 
     // Subscribe to real-time updates when a conversation is selected
@@ -42,7 +53,7 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
                 (newMessage) => {
                     setMessages(prev => [...prev, newMessage]);
                     // Mark as read if not from current user
-                    if (newMessage.senderId !== userProfile?.name) {
+                    if (newMessage.senderId !== currentUserId) {
                         MessagingService.markMessagesAsRead(selectedConversation.id);
                     }
                 }
@@ -100,20 +111,30 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
         if (!otherParentEmail.trim()) return;
 
         try {
-            // For now, we'll need the user to manually provide the other parent's user ID
-            // In a real app, you'd want to implement user search/invite functionality
-            setShowNewConversation(false);
-            setOtherParentEmail('');
-            alert('Feature coming soon: You\'ll be able to start conversations by inviting the other parent via email.');
+            const conversationId = await MessagingService.createConversationByEmail(otherParentEmail.trim());
+            
+            if (conversationId) {
+                // Refresh conversations to show the new one
+                await loadConversations();
+                setShowNewConversation(false);
+                setOtherParentEmail('');
+                
+                // Find and select the new conversation
+                const updatedConversations = await MessagingService.getConversations();
+                const newConversation = updatedConversations.find(conv => conv.id === conversationId);
+                if (newConversation) {
+                    setSelectedConversation(newConversation);
+                }
+            } else {
+                alert('User not found. Please make sure the email address is correct and the other parent has an account.');
+            }
         } catch (error) {
             console.error('Error creating conversation:', error);
+            alert('Error starting conversation. Please try again.');
         }
     };
 
-    const getCurrentUserId = async () => {
-        // This function is no longer needed as we handle user ID in the service
-        return null;
-    };
+    // Current user ID is now tracked in component state
 
     if (loading) {
         return (
@@ -219,7 +240,7 @@ const Messaging: React.FC<MessagingProps> = ({ userProfile }) => {
                             ) : (
                                 <div className="space-y-6">
                                     {messages.map(msg => {
-                                        const isCurrentUser = msg.senderId === userProfile?.name; // This will need to be updated to use actual user ID comparison
+                                        const isCurrentUser = msg.senderId === currentUserId;
                                         return (
                                             <div key={msg.id} className={`flex items-end gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                                                 <div className={`max-w-xl px-4 py-3 rounded-2xl ${
