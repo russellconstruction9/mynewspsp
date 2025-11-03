@@ -38,22 +38,45 @@ Key Guidelines:
 
 export const getChatResponse = async (messages: ChatMessage[], userProfile: UserProfile | null): Promise<{ text: string; tokensUsed: number }> => {
     try {
+        console.log('🤖 Starting Gemini API call...');
         const genAI = getGeminiAPI();
+        console.log('✅ Gemini API client initialized');
+        
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        console.log('✅ Model loaded: gemini-1.5-flash');
         
         const systemInstruction = SYSTEM_PROMPT_CHAT.replace('{USER_PROFILE_CONTEXT}', formatUserProfileContext(userProfile));
         const lastMessage = messages[messages.length - 1];
         
+        console.log('📝 Sending message to Gemini:', lastMessage.content.substring(0, 100) + '...');
+        
         const result = await model.generateContent(`${systemInstruction}\n\nUser: ${lastMessage.content}`);
         const response = result.response;
+        
+        console.log('✅ Gemini response received');
         
         return { 
             text: response.text(), 
             tokensUsed: result.response.usageMetadata?.totalTokenCount ?? 0 
         };
     } catch (error: any) {
-        console.error('Gemini API error:', error);
-        throw new Error(`AI service error: ${error.message}`);
+        console.error('❌ Gemini API error details:', {
+            message: error.message,
+            status: error.status,
+            code: error.code,
+            details: error.details
+        });
+        
+        // Provide more specific error messages
+        if (error.message?.includes('API_KEY_INVALID')) {
+            throw new Error('❌ Invalid Gemini API key. Please check your VITE_GEMINI_API_KEY environment variable.');
+        } else if (error.message?.includes('QUOTA_EXCEEDED')) {
+            throw new Error('❌ Gemini API quota exceeded. Please check your Google Cloud billing.');
+        } else if (error.message?.includes('PERMISSION_DENIED')) {
+            throw new Error('❌ Gemini API access denied. Please ensure the API is enabled in Google Cloud.');
+        } else {
+            throw new Error(`❌ AI service error: ${error.message || 'Unknown error occurred'}`);
+        }
     }
 };
 

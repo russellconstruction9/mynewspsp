@@ -105,9 +105,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             const { text, tokensUsed } = await getChatResponse(newMessages, userProfile);
             handleTokensUsed(tokensUsed);
             setMessages(prev => [...prev, { role: 'model', content: text }]);
-        } catch (error) {
-            console.error(error);
-            setMessages(prev => [...prev, { role: 'model', content: "Sorry, an error occurred." }]);
+        } catch (error: any) {
+            console.error('💥 Chat error:', error);
+            const errorMessage = error.message || 'Sorry, an error occurred.';
+            setMessages(prev => [...prev, { 
+                role: 'model', 
+                content: `🚨 ${errorMessage}\n\nPlease check the browser console for more details or try again.` 
+            }]);
         } finally {
             setIsLoading(false);
         }
