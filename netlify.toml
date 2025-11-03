@@ -19,8 +19,3 @@
 
 [context.branch-deploy.environment]
   VITE_SUPABASE_URL = "https://mtdnnjanxqyvklzstwzl.supabase.co"
-
-# Functions configuration (if you want to use Netlify Functions later)
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
