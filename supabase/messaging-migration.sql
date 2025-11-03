@@ -170,6 +170,11 @@ CREATE TABLE IF NOT EXISTS public.invitations (
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for Invitations
+-- Drop existing policies if they exist, then recreate them
+DROP POLICY IF EXISTS "Users can view their sent invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Users can create invitations" ON public.invitations;
+DROP POLICY IF EXISTS "Users can update their invitations" ON public.invitations;
+
 CREATE POLICY "Users can view their sent invitations" ON public.invitations
     FOR SELECT USING (auth.uid() = sender_id);
 
