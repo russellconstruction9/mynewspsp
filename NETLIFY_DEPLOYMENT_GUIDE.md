@@ -34,10 +34,14 @@
 5. **Set Environment Variables**:
    Go to Site settings → Environment variables and add:
    ```
-   VITE_SUPABASE_URL = https://mtdnnjanxqyvklzstwzl.supabase.co
-   VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10ZG5uamFueHF5dmtsenN0d3psIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxMTYxNDQsImV4cCI6MjA3NzY5MjE0NH0.qU_lXSQLg1Ha2WT-D6RDFjiep24FnLLtHjsgys_Yyts
-   VITE_GEMINI_API_KEY = AIzaSyCvMT78j9HFFiM9xJ08p9A-kkLerZoCY8k
+   VITE_SUPABASE_URL = [Your Supabase Project URL]
+   VITE_SUPABASE_ANON_KEY = [Your Supabase Anonymous Key]
+   VITE_GEMINI_API_KEY = [Your Google Gemini API Key]
    ```
+   
+   **⚠️ SECURITY NOTE**: Get these values from:
+   - Supabase URL & Key: Your Supabase project dashboard → Settings → API
+   - Gemini API Key: https://makersuite.google.com/app/apikey
 
 6. **Trigger Redeploy**:
    - Go to Deploys tab
@@ -91,11 +95,13 @@
 
 ## 🔐 **Environment Variables Required**
 
-| Variable | Value | Purpose |
-|----------|-------|---------|
-| `VITE_SUPABASE_URL` | `https://mtdnnjanxqyvklzstwzl.supabase.co` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` | Supabase authentication |
-| `VITE_GEMINI_API_KEY` | `AIzaSyCvMT78j9HFFiM9xJ08p9A-kkLerZoCY8k` | Google Gemini AI integration |
+| Variable | Source | Purpose |
+|----------|--------|---------|
+| `VITE_SUPABASE_URL` | Supabase Dashboard → Settings → API | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API | Supabase authentication |
+| `VITE_GEMINI_API_KEY` | Google AI Studio → API Keys | Google Gemini AI integration |
+
+**🔒 SECURITY**: Never commit these values to your repository. Add them only in Netlify's environment variables dashboard.
 
 ## ✅ **Verification Checklist**
 
