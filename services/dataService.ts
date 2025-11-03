@@ -262,6 +262,8 @@ export class DataService {
     }
   }
 
+  // Messaging will be handled by MessagingService - keeping this comment for reference
+  
   // Subscription Management
   static async getSubscriptionData(): Promise<{ tier: SubscriptionTier; tokenUsage: TokenUsage }> {
     try {

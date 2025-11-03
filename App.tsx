@@ -21,7 +21,7 @@ import ConsultationModal from './components/ConsultationModal';
 import NetlifyForm from './components/NetlifyForm';
 import OnboardingInfo from './components/OnboardingInfo';
 import AuthForm from './components/AuthForm';
-import { Report, UserProfile as UserProfileType, StoredDocument, View, IncidentTemplate, CoParentMessage, SubscriptionTier, TokenUsage } from './types';
+import { Report, UserProfile as UserProfileType, StoredDocument, View, IncidentTemplate, SubscriptionTier, TokenUsage } from './types';
 import { TOKEN_LIMITS } from './constants';
 import { SparklesIcon } from './components/icons';
 
@@ -70,15 +70,7 @@ const AuthenticatedApp: React.FC = () => {
         }
     });
 
-    const [messages, setMessages] = useState<CoParentMessage[]>(() => {
-        try {
-            const savedMessages = localStorage.getItem('coParentingMessages');
-            return savedMessages ? JSON.parse(savedMessages) : [];
-        } catch (error) {
-            console.error("Failed to load messages from localStorage", error);
-            return [];
-        }
-    });
+    // Co-parenting messaging is now handled by MessagingService
 
     const [subscriptionTier, setSubscriptionTier] = useState<SubscriptionTier>(() => {
         const savedTier = localStorage.getItem('subscriptionTier') as SubscriptionTier | null;
@@ -111,7 +103,7 @@ const AuthenticatedApp: React.FC = () => {
     // Save data to localStorage whenever it changes
     useEffect(() => { localStorage.setItem('reports', JSON.stringify(reports)); }, [reports]);
     useEffect(() => { localStorage.setItem('incidentTemplates', JSON.stringify(incidentTemplates)); }, [incidentTemplates]);
-    useEffect(() => { localStorage.setItem('coParentingMessages', JSON.stringify(messages)); }, [messages]);
+    // Messages are now handled by Supabase through MessagingService
     useEffect(() => { localStorage.setItem('subscriptionTier', subscriptionTier); }, [subscriptionTier]);
     useEffect(() => { localStorage.setItem('tokenUsage', JSON.stringify(tokenUsage)); }, [tokenUsage]);
     
@@ -204,26 +196,8 @@ const AuthenticatedApp: React.FC = () => {
         setIncidentTemplates(prev => prev.filter(t => t.id !== templateId));
     }, []);
 
-    const handleSendMessage = (text: string) => {
-        const userMessage: CoParentMessage = {
-            id: `msg_${Date.now()}`,
-            text,
-            senderId: 'user',
-            timestamp: new Date().toISOString(),
-        };
-        const updatedMessages = [...messages, userMessage];
-        setMessages(updatedMessages);
-        setTimeout(() => {
-            const otherParentResponse: CoParentMessage = {
-                id: `msg_${Date.now() + 1}`,
-                text: `Received: "${text}". I will review this shortly.`,
-                senderId: 'other_parent',
-                timestamp: new Date().toISOString(),
-            };
-            setMessages(prev => [...prev, otherParentResponse]);
-        }, 1500 + Math.random() * 1000);
-    };
-
+    // Message handling is now done within the Messaging component using MessagingService
+    
     const handleViewChange = useCallback((newView: View) => {
         const tierRequired: Partial<Record<View, SubscriptionTier>> = {
             'patterns': 'Plus',
@@ -355,11 +329,7 @@ const AuthenticatedApp: React.FC = () => {
                             {...commonAiProps}
                         />;
             case 'messaging':
-                return <Messaging 
-                            messages={messages}
-                            onSendMessage={handleSendMessage}
-                            userProfile={userProfile}
-                        />;
+                return <Messaging userProfile={userProfile} />;
             case 'patterns':
                 return <PatternAnalysis reports={reports} {...commonAiProps} />;
             case 'insights':
