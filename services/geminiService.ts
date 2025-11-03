@@ -42,8 +42,8 @@ export const getChatResponse = async (messages: ChatMessage[], userProfile: User
         const genAI = getGeminiAPI();
         console.log('✅ Gemini API client initialized');
         
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-        console.log('✅ Model loaded: gemini-2.0-flash-exp');
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        console.log('✅ Model loaded: gemini-2.5-flash');
         
         const systemInstruction = SYSTEM_PROMPT_CHAT.replace('{USER_PROFILE_CONTEXT}', formatUserProfileContext(userProfile));
         const lastMessage = messages[messages.length - 1];
@@ -84,7 +84,7 @@ export const generateJsonReport = async (messages: ChatMessage[], userProfile: U
     try {
         const genAI = getGeminiAPI();
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash",
             generationConfig: {
                 responseMimeType: "application/json"
             }
@@ -127,7 +127,7 @@ export const getThemeAnalysis = async (reports: Report[], category: string): Pro
     try {
         const genAI = getGeminiAPI();
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash",
             generationConfig: {
                 responseMimeType: "application/json"
             }
@@ -165,7 +165,7 @@ export const getThemeAnalysis = async (reports: Report[], category: string): Pro
 export const getSingleIncidentAnalysis = async (mainReport: Report, allReports: Report[], userProfile: UserProfile | null): Promise<{ analysis: string; sources: any[]; tokensUsed: number }> => {
     try {
         const genAI = getGeminiAPI();
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const mainReportContent = `--- PRIMARY INCIDENT ---\n${mainReport.content}\n--- END PRIMARY INCIDENT ---`;
         const otherReportsContent = allReports
@@ -204,7 +204,7 @@ export const getLegalAssistantResponse = async (
 ): Promise<{ response: LegalAssistantResponse & { sources?: any[] }; tokensUsed: number }> => {
     try {
         const genAI = getGeminiAPI();
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const reportsContent = reports.map(r => `--- REPORT ---\n${r.content}\n--- END REPORT ---`).join('\n\n');
         const documentsContent = documents.map(d => `--- DOCUMENT: ${d.name} ---\nFolder: ${d.folder}\n--- END DOCUMENT ---`).join('\n\n');
@@ -245,7 +245,7 @@ export const getLegalAssistantResponse = async (
 export const getInitialLegalAnalysis = async (mainReport: Report, allReports: Report[], userProfile: UserProfile | null): Promise<{ response: LegalAssistantResponse & { sources?: any[] }; tokensUsed: number }> => {
     try {
         const genAI = getGeminiAPI();
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const mainReportContent = `--- PRIMARY INCIDENT ---\n${mainReport.content}\n--- END PRIMARY INCIDENT ---`;
         const otherReportsContent = allReports
@@ -285,7 +285,7 @@ export const analyzeDocument = async (
 ): Promise<{ analysis: string; tokensUsed: number }> => {
     try {
         const genAI = getGeminiAPI();
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         
         const prompt = `Analyze this document for legal relevance, completeness, and potential improvements. Focus on clarity, legal accuracy, and strategic value.
 
@@ -318,7 +318,7 @@ export const redraftDocument = async (
     try {
         const genAI = getGeminiAPI();
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash",
             generationConfig: {
                 responseMimeType: "application/json"
             }
@@ -373,7 +373,7 @@ export const generateEvidencePackage = async (
     try {
         const genAI = getGeminiAPI();
         const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash",
             generationConfig: {
                 responseMimeType: "application/json"
             }
