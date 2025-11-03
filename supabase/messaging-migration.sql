@@ -41,6 +41,10 @@ ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversation_participants ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for Conversations
+-- Drop existing policies if they exist, then recreate them
+DROP POLICY IF EXISTS "Users can view their conversations" ON public.conversations;
+DROP POLICY IF EXISTS "Users can create conversations" ON public.conversations;
+
 -- Users can only see conversations they are part of
 CREATE POLICY "Users can view their conversations" ON public.conversations
     FOR SELECT USING (
@@ -53,6 +57,11 @@ CREATE POLICY "Users can create conversations" ON public.conversations
     );
 
 -- RLS Policies for Messages
+-- Drop existing policies if they exist, then recreate them
+DROP POLICY IF EXISTS "Users can view messages in their conversations" ON public.messages;
+DROP POLICY IF EXISTS "Users can send messages in their conversations" ON public.messages;
+DROP POLICY IF EXISTS "Users can update their own messages" ON public.messages;
+
 -- Users can only see messages in conversations they are part of
 CREATE POLICY "Users can view messages in their conversations" ON public.messages
     FOR SELECT USING (
@@ -77,6 +86,10 @@ CREATE POLICY "Users can update their own messages" ON public.messages
     FOR UPDATE USING (auth.uid() = sender_id);
 
 -- RLS Policies for Conversation Participants
+-- Drop existing policies if they exist, then recreate them
+DROP POLICY IF EXISTS "Users can view participants in their conversations" ON public.conversation_participants;
+DROP POLICY IF EXISTS "Users can join conversations they're part of" ON public.conversation_participants;
+
 CREATE POLICY "Users can view participants in their conversations" ON public.conversation_participants
     FOR SELECT USING (
         EXISTS (
@@ -106,6 +119,10 @@ CREATE INDEX IF NOT EXISTS idx_conversation_participants_conversation ON public.
 CREATE INDEX IF NOT EXISTS idx_conversation_participants_user ON public.conversation_participants(user_id);
 
 -- Create triggers for updated_at
+-- Drop existing triggers if they exist, then recreate them
+DROP TRIGGER IF EXISTS update_conversations_updated_at ON public.conversations;
+DROP TRIGGER IF EXISTS update_messages_updated_at ON public.messages;
+
 CREATE TRIGGER update_conversations_updated_at 
     BEFORE UPDATE ON public.conversations 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -126,9 +143,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing trigger if it exists, then recreate it
+DROP TRIGGER IF EXISTS populate_participants_on_conversation_create ON public.conversations;
 CREATE TRIGGER populate_participants_on_conversation_create
     AFTER INSERT ON public.conversations
     FOR EACH ROW EXECUTE FUNCTION populate_conversation_participants();
+
+-- Update user profiles table to include email for finding other parents
+ALTER TABLE public.user_profiles ADD COLUMN IF NOT EXISTS email TEXT;
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 
 -- Function to find or create a conversation between two users
 CREATE OR REPLACE FUNCTION get_or_create_conversation(user1_id UUID, user2_id UUID)
